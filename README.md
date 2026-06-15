@@ -1,10 +1,9 @@
+
 # ⚡ TaskFlow — Task Management Application
 
 A full-stack task management app with Admin & User panels, real-time charts, messaging, and profile photos.
 
 ## 🗂️ Project Structure
-
-```
 taskapp/
 ├── backend/
 │   ├── models/         User.js, Task.js, Message.js
@@ -21,7 +20,6 @@ taskapp/
     │   ├── admin-dashboard.html
     │   └── user-dashboard.html
     └── index.html      (Login / Register)
-```
 
 ## 🚀 Setup & Run
 
@@ -30,35 +28,32 @@ taskapp/
 - MongoDB (local) OR MongoDB Atlas free tier
 
 ### 2. Install Dependencies
-```bash
+bash
 cd backend
 npm install
-```
 
 ### 3. Configure Environment
 Edit `backend/.env`:
-```env
+env
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/taskmanager
 JWT_SECRET=your_super_secret_key_change_this
 ADMIN_EMAIL=paulsubhasini31@gmail.com
 ADMIN_PASSWORD=123456
-```
 
 For MongoDB Atlas, replace MONGODB_URI with your connection string.
 
 ### 4. Start the Server
-```bash
+bash
 cd backend
 npm start
 # OR for dev with auto-reload:
 npm run dev
-```
 
 ### 5. Open the App
 Visit: **http://localhost:5000**
 
----
+
 
 ## 🔐 Login Credentials
 
@@ -67,7 +62,6 @@ Visit: **http://localhost:5000**
 | Admin | paulsubhasini31@gmail.com  | 123456   |
 | User  | Register a new account     | Any      |
 
----
 
 ## ✨ Features
 
@@ -91,7 +85,7 @@ Visit: **http://localhost:5000**
 - 🔒 Change password
 - 🌙 Dark / Light mode toggle
 
----
+
 
 ## 🛠️ Tech Stack
 - **Backend:** Node.js, Express.js, MongoDB, Mongoose
@@ -101,7 +95,8 @@ Visit: **http://localhost:5000**
 - **Charts:** Chart.js (CDN)
 - **Passwords stored in:** `.env` (hashed with bcrypt in DB)
 
----
-
 ## 📱 Responsive Design
 Works on mobile, tablet, and desktop. Hamburger menu on mobile.
+
+# TaskMangement
+Developed a Task Management System that enables users to create, update, organize, and track tasks efficiently. The application features task categorization, status management, and a user-friendly interface to improve productivity and workflow management.
