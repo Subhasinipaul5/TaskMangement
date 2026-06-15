@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow — My Dashboard</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="animated-bg"></div>
+  <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">Task<span>Flow</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-label">Overview</div>
+          <div class="nav-item active" onclick="showSection('dashboard')">
+            <span class="nav-icon">🏠</span> Dashboard
+          </div>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-label">Work</div>
+          <div class="nav-item" onclick="showSection('tasks')">
+            <span class="nav-icon">📋</span> My Tasks
+          </div>
+          <div class="nav-item" onclick="showSection('progress')">
+            <span class="nav-icon">📈</span> My Progress
+          </div>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-label">Account</div>
+          <div class="nav-item" onclick="showSection('profile')">
+            <span class="nav-icon">👤</span> Profile
+          </div>
+          <div class="nav-item" onclick="showSection('contact')">
+            <span class="nav-icon">💬</span> Contact Admin
+          </div>
+          <div class="nav-item" onclick="showSection('settings')">
+            <span class="nav-icon">⚙️</span> Settings
+          </div>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-mini" onclick="showSection('profile')">
+          <div id="sidebarAvatar"></div>
+          <div class="user-mini-info">
+            <div class="user-mini-name" id="sidebarName">User</div>
+            <div class="user-mini-role">Team Member 🙌</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="hamburger" onclick="toggleSidebar()">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="page-title" id="pageTitle">🏠 Dashboard</div>
+        </div>
+        <div class="topbar-right">
+          <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
+          <button class="btn btn-secondary btn-sm" onclick="logout()">🚪 Logout</button>
+        </div>
+      </header>
+
+      <div class="page-content">
+
+        <!-- ===== DASHBOARD ===== -->
+        <section id="sec-dashboard" class="active fade-in">
+          <div style="margin-bottom:28px;position:relative;overflow:hidden;">
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;" id="greetTime">Good morning 👋</div>
+            <h1 id="welcomeName">Welcome back!</h1>
+            <p style="color:var(--text-muted);margin-top:6px;">Here's your task overview for today</p>
+            <div style="position:absolute;right:-10px;top:-10px;font-size:7rem;opacity:0.06;pointer-events:none;">🚀</div>
+          </div>
+
+          <div class="stats-grid" id="userStats">
+            <div class="stat-card purple"><div class="stat-icon purple">📋</div><div class="stat-info"><div class="stat-value" id="uStatTotal">—</div><div class="stat-label">Total Tasks</div></div></div>
+            <div class="stat-card green"><div class="stat-icon green">✅</div><div class="stat-info"><div class="stat-value" id="uStatDone">—</div><div class="stat-label">Completed</div></div></div>
+            <div class="stat-card amber"><div class="stat-icon amber">⚡</div><div class="stat-info"><div class="stat-value" id="uStatActive">—</div><div class="stat-label">In Progress</div></div></div>
+            <div class="stat-card cyan"><div class="stat-icon cyan">📌</div><div class="stat-info"><div class="stat-value" id="uStatTodo">—</div><div class="stat-label">To Do</div></div></div>
+          </div>
+
+          <!-- Charts -->
+          <div class="charts-grid">
+            <div class="card">
+              <div class="card-header"><h3>📊 Task Status</h3></div>
+              <canvas id="uStatusPie" height="220"></canvas>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>🎯 Completion Rate</h3></div>
+              <canvas id="uCompletionDonut" height="220"></canvas>
+            </div>
+          </div>
+
+          <!-- My Tasks Today -->
+          <div class="card">
+            <div class="card-header">
+              <h3>📌 My Active Tasks</h3>
+              <button class="btn btn-primary btn-sm" onclick="showSection('tasks')">View All</button>
+            </div>
+            <div id="activeTasks">
+              <div class="text-center text-muted" style="padding:30px;">Loading...</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== MY TASKS ===== -->
+        <section id="sec-tasks" class="fade-in">
+          <div style="margin-bottom:24px;">
+            <h2>📋 My Tasks</h2>
+            <p style="color:var(--text-muted);font-size:0.88rem;margin-top:4px;">Tasks assigned to you</p>
+          </div>
+
+          <!-- Filter bar -->
+          <div class="card" style="padding:14px;margin-bottom:18px;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+              <select class="form-control" style="width:auto;" id="uFilterStatus" onchange="loadMyTasks()">
+                <option value="">All Status</option>
+                <option value="todo">To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+              <select class="form-control" style="width:auto;" id="uFilterPriority" onchange="loadMyTasks()">
+                <option value="">All Priority</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <input type="text" class="form-control" style="flex:1;min-width:160px;" id="uFilterSearch" placeholder="🔍 Search tasks..." oninput="loadMyTasks()">
+            </div>
+          </div>
+
+          <div id="myTasksContainer">
+            <div class="text-center text-muted" style="padding:40px;">Loading tasks...</div>
+          </div>
+        </section>
+
+        <!-- ===== PROGRESS ===== -->
+        <section id="sec-progress" class="fade-in">
+          <div style="margin-bottom:24px;">
+            <h2>📈 My Progress</h2>
+            <p style="color:var(--text-muted);font-size:0.88rem;margin-top:4px;">Track your performance over time</p>
+          </div>
+
+          <div class="charts-grid">
+            <div class="card">
+              <div class="card-header"><h3>🍕 Task Distribution</h3></div>
+              <canvas id="progressPie" height="250"></canvas>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>📊 Priority Breakdown</h3></div>
+              <canvas id="progressBar" height="250"></canvas>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:0;">
+            <div class="card-header"><h3>🏆 Performance Summary</h3></div>
+            <div id="perfSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h3>📋 Task Details</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Task</th><th>Priority</th><th>Status</th><th>Progress</th><th>Due Date</th></tr></thead>
+                <tbody id="progressTable"><tr><td colspan="5" class="text-center text-muted">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== PROFILE ===== -->
+        <section id="sec-profile" class="fade-in">
+          <h2 style="margin-bottom:24px;">👤 My Profile</h2>
+          <div class="card" style="max-width:680px;">
+            <div class="profile-header">
+              <div class="profile-avatar-wrap">
+                <div id="profileAvatarEl" class="profile-avatar" style="width:100px;height:100px;font-size:2rem;display:flex;align-items:center;justify-content:center;border-radius:50%;border:3px solid var(--accent);background:var(--gradient);color:#fff;font-weight:800;">U</div>
+                <div class="avatar-edit" onclick="document.getElementById('uPhotoInput').click()">✏️</div>
+                <input type="file" id="uPhotoInput" accept="image/*" style="display:none" onchange="uploadUserPhoto(this)">
+              </div>
+              <div style="flex:1;">
+                <h3 id="uProfileName">—</h3>
+                <p style="color:var(--text-muted);font-size:0.85rem;" id="uProfileEmail">—</p>
+                <span class="badge badge-user" style="margin-top:8px;">🙌 Team Member</span>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <h3 style="margin-bottom:18px;">Edit Info</h3>
+            <div class="grid-2">
+              <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="uEditName" class="form-control"></div>
+              <div class="form-group"><label class="form-label">Phone</label><input type="text" id="uEditPhone" class="form-control" placeholder="+91 XXXXX XXXXX"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Department</label><input type="text" id="uEditDept" class="form-control" placeholder="e.g. Design, Marketing..."></div>
+            <div class="form-group"><label class="form-label">Bio</label><textarea id="uEditBio" class="form-control" rows="3" placeholder="Tell about yourself..."></textarea></div>
+            <button class="btn btn-primary" onclick="saveUserProfile()">💾 Save Changes</button>
+          </div>
+        </section>
+
+        <!-- ===== CONTACT ADMIN ===== -->
+        <section id="sec-contact" class="fade-in">
+          <div style="margin-bottom:24px;">
+            <h2>💬 Contact Admin</h2>
+            <p style="color:var(--text-muted);font-size:0.88rem;margin-top:4px;">Send a message or request to the administrator</p>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;max-width:900px;">
+            <!-- Send Message -->
+            <div class="card">
+              <div class="card-header"><h3>✉️ New Message</h3></div>
+              <div style="font-size:3rem;text-align:center;opacity:0.15;margin-bottom:12px;">📬</div>
+              <div class="form-group"><label class="form-label">Subject *</label><input type="text" id="msgSubject" class="form-control" placeholder="What is this about?"></div>
+              <div class="form-group"><label class="form-label">Message *</label><textarea id="msgBody" class="form-control" rows="5" placeholder="Type your message here..."></textarea></div>
+              <button class="btn btn-primary w-full" onclick="sendMessage()">📤 Send Message</button>
+            </div>
+
+            <!-- Sent Messages -->
+            <div class="card">
+              <div class="card-header">
+                <h3>📨 My Sent Messages</h3>
+                <button class="btn btn-secondary btn-sm" onclick="loadSentMessages()">🔄</button>
+              </div>
+              <div id="sentMessages">
+                <div class="text-center text-muted" style="padding:20px;">Loading...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== SETTINGS ===== -->
+        <section id="sec-settings" class="fade-in">
+          <h2 style="margin-bottom:24px;">⚙️ Settings</h2>
+          <div class="card" style="max-width:480px;">
+            <h3 style="margin-bottom:20px;">🔒 Change Password</h3>
+            <div class="form-group"><label class="form-label">Current Password</label><input type="password" id="uCurrPass" class="form-control"></div>
+            <div class="form-group"><label class="form-label">New Password</label><input type="password" id="uNewPass" class="form-control"></div>
+            <div class="form-group"><label class="form-label">Confirm New Password</label><input type="password" id="uConfirmPass" class="form-control"></div>
+            <button class="btn btn-primary" onclick="changeUserPassword()">🔄 Update Password</button>
+          </div>
+          <div class="card" style="max-width:480px;margin-top:20px;">
+            <h3 style="margin-bottom:16px;">🎨 Appearance</h3>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
+              <div>
+                <div style="font-weight:600;">Dark / Light Mode</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Toggle the interface theme</div>
+              </div>
+              <div class="theme-toggle" onclick="toggleTheme()"></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== UPDATE TASK MODAL ===== -->
+  <div class="modal-overlay" id="updateTaskModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📝 Update Task</h3>
+        <button class="modal-close" onclick="closeModal('updateTaskModal')">✕</button>
+      </div>
+      <div id="updateTaskInfo" style="background:var(--bg-card);border-radius:10px;padding:14px;margin-bottom:18px;"></div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="utStatus" class="form-control">
+          <option value="todo">📌 To Do</option>
+          <option value="in-progress">⚡ In Progress</option>
+          <option value="completed">✅ Completed</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Progress: <span id="progressValue">0</span>%</label>
+        <input type="range" id="utProgress" min="0" max="100" value="0" class="form-control" style="padding:6px 0;" oninput="document.getElementById('progressValue').textContent=this.value">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea id="utNotes" class="form-control" rows="3" placeholder="Add a note about your progress..."></textarea>
+      </div>
+      <input type="hidden" id="utTaskId">
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeModal('updateTaskModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitTaskUpdate()">💾 Save Update</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!requireAuth('user')) {}
+
+    let myTasks = [];
+    let uCharts = {};
+
+    async function init() {
+      const user = getUser();
+      const hour = new Date().getHours();
+      const greet = hour < 12 ? 'Good morning ☀️' : hour < 17 ? 'Good afternoon 🌤️' : 'Good evening 🌙';
+      document.getElementById('greetTime').textContent = greet;
+      document.getElementById('welcomeName').textContent = `Welcome back, ${user.name}!`;
+      document.getElementById('sidebarName').textContent = user.name;
+      document.getElementById('sidebarAvatar').innerHTML = avatarHtml(user, 36);
+      loadDashboard();
+    }
+
+    function showSection(name) {
+      document.querySelectorAll('.page-content > section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`sec-${name}`).classList.add('active');
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(n => {
+        const txt = n.textContent.toLowerCase();
+        if ((name === 'dashboard' && txt.includes('dashboard')) ||
+            (name === 'tasks' && txt.includes('tasks')) ||
+            (name === 'progress' && txt.includes('progress')) ||
+            (name === 'profile' && txt.includes('profile')) ||
+            (name === 'contact' && txt.includes('contact')) ||
+            (name === 'settings' && txt.includes('settings'))) n.classList.add('active');
+      });
+      const titles = { dashboard: '🏠 Dashboard', tasks: '📋 My Tasks', progress: '📈 My Progress', profile: '👤 Profile', contact: '💬 Contact Admin', settings: '⚙️ Settings' };
+      document.getElementById('pageTitle').textContent = titles[name] || name;
+      closeSidebar();
+      if (name === 'tasks') loadMyTasks();
+      if (name === 'progress') loadProgress();
+      if (name === 'profile') loadUserProfile();
+      if (name === 'contact') loadSentMessages();
+    }
+
+    // ===== Dashboard =====
+    async function loadDashboard() {
+      try {
+        const [stats, tasks] = await Promise.all([TaskAPI.getStats(), TaskAPI.getAll()]);
+        myTasks = tasks;
+        document.getElementById('uStatTotal').textContent = stats.total;
+        document.getElementById('uStatDone').textContent = stats.completed;
+        document.getElementById('uStatActive').textContent = stats.inProgress;
+        document.getElementById('uStatTodo').textContent = stats.todo;
+        renderUserCharts(stats);
+        renderActiveTasks(tasks.filter(t => t.status !== 'completed').slice(0, 5));
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    function renderUserCharts(stats) {
+      const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      Chart.defaults.color = isDark ? '#b0aed0' : '#4a4870';
+
+      if (uCharts.pie) uCharts.pie.destroy();
+      uCharts.pie = new Chart(document.getElementById('uStatusPie').getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels: ['To Do', 'In Progress', 'Completed'],
+          datasets: [{ data: [stats.todo, stats.inProgress, stats.completed], backgroundColor: ['#6b7280','#f59e0b','#10b981'], borderWidth: 0 }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+      });
+
+      if (uCharts.donut) uCharts.donut.destroy();
+      const pct = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
+      uCharts.donut = new Chart(document.getElementById('uCompletionDonut').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Completed', 'Remaining'],
+          datasets: [{ data: [stats.completed || 0, (stats.total - stats.completed) || 1], backgroundColor: ['#7c3aed','rgba(255,255,255,0.08)'], borderWidth: 0, cutout: '75%' }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } },
+        plugins: [{
+          id: 'centerPct',
+          afterDraw(chart) {
+            const { ctx, chartArea: { width, height, left, top } } = chart;
+            ctx.save();
+            ctx.font = 'bold 26px sans-serif';
+            ctx.fillStyle = isDark ? '#fff' : '#1a1040';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(`${pct}%`, left + width/2, top + height/2);
+            ctx.restore();
+          }
+        }]
+      });
+    }
+
+    function renderActiveTasks(tasks) {
+      const el = document.getElementById('activeTasks');
+      if (!tasks.length) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-icon">🎉</div><p>All tasks completed! Great work!</p></div>';
+        return;
+      }
+      el.innerHTML = tasks.map(t => `
+        <div class="task-card" onclick="openUpdateModal('${t._id}')">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+            <div style="flex:1;">
+              <div class="task-card-title">${t.title}</div>
+              ${t.description ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">${t.description.slice(0,80)}${t.description.length>80?'...':''}</div>` : ''}
+              <div class="task-card-meta">
+                <span class="badge badge-${t.priority}">${t.priority}</span>
+                <span class="badge badge-${t.status}">${t.status.replace('-',' ')}</span>
+                ${t.dueDate ? `<span>📅 ${formatDate(t.dueDate)}</span>` : ''}
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-size:1.1rem;font-weight:700;color:var(--accent);">${t.progress}%</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">done</div>
+            </div>
+          </div>
+          <div class="progress-bar" style="margin-top:10px;"><div class="progress-fill" style="width:${t.progress}%"></div></div>
+        </div>
+      `).join('');
+    }
+
+    // ===== My Tasks =====
+    async function loadMyTasks() {
+      try {
+        if (!myTasks.length) myTasks = await TaskAPI.getAll();
+        const statusF = document.getElementById('uFilterStatus').value;
+        const priorityF = document.getElementById('uFilterPriority').value;
+        const searchF = document.getElementById('uFilterSearch').value.toLowerCase();
+        let filtered = myTasks.filter(t =>
+          (!statusF || t.status === statusF) &&
+          (!priorityF || t.priority === priorityF) &&
+          (!searchF || t.title.toLowerCase().includes(searchF))
+        );
+        const container = document.getElementById('myTasksContainer');
+        if (!filtered.length) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>No tasks match your filters.</p></div>';
+          return;
+        }
+        container.innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+            ${filtered.map(t => `
+              <div class="card" style="cursor:pointer;padding:18px;" onclick="openUpdateModal('${t._id}')">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;">
+                  <div style="font-weight:700;flex:1;">${t.title}</div>
+                  <span class="badge badge-${t.priority}">${t.priority}</span>
+                </div>
+                ${t.description ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:10px;">${t.description.slice(0,100)}${t.description.length>100?'...':''}</div>` : ''}
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                  <span class="badge badge-${t.status}">${t.status.replace('-',' ')}</span>
+                  ${t.category ? `<span class="badge" style="background:rgba(6,182,212,0.15);color:var(--accent2);">${t.category}</span>` : ''}
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-muted);margin-bottom:6px;">
+                  <span>Progress</span><span style="font-weight:700;color:var(--accent);">${t.progress}%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:${t.progress}%"></div></div>
+                ${t.dueDate ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:10px;">📅 Due: ${formatDate(t.dueDate)}</div>` : ''}
+                ${t.notes ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:8px;padding:6px 10px;background:rgba(255,255,255,0.04);border-radius:6px;">📝 ${t.notes.slice(0,80)}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ===== Update Task Modal =====
+    function openUpdateModal(id) {
+      const task = myTasks.find(t => t._id === id);
+      if (!task) return;
+      document.getElementById('utTaskId').value = id;
+      document.getElementById('utStatus').value = task.status;
+      document.getElementById('utProgress').value = task.progress;
+      document.getElementById('progressValue').textContent = task.progress;
+      document.getElementById('utNotes').value = task.notes || '';
+      document.getElementById('updateTaskInfo').innerHTML = `
+        <div style="font-weight:700;margin-bottom:4px;">${task.title}</div>
+        <div style="font-size:0.82rem;color:var(--text-muted);">${task.description || ''}</div>
+        <div style="margin-top:8px;display:flex;gap:8px;">
+          <span class="badge badge-${task.priority}">${task.priority}</span>
+          ${task.dueDate ? `<span style="font-size:0.8rem;color:var(--text-muted);">📅 ${formatDate(task.dueDate)}</span>` : ''}
+        </div>
+      `;
+      document.getElementById('updateTaskModal').classList.add('open');
+    }
+
+    async function submitTaskUpdate() {
+      const id = document.getElementById('utTaskId').value;
+      const status = document.getElementById('utStatus').value;
+      const progress = parseInt(document.getElementById('utProgress').value);
+      const notes = document.getElementById('utNotes').value.trim();
+      try {
+        await TaskAPI.update(id, { status, progress, notes });
+        myTasks = [];
+        closeModal('updateTaskModal');
+        showToast('Task updated! 🎉', 'success');
+        loadDashboard();
+        if (document.getElementById('sec-tasks').classList.contains('active')) loadMyTasks();
+        if (document.getElementById('sec-progress').classList.contains('active')) loadProgress();
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ===== Progress =====
+    async function loadProgress() {
+      try {
+        const [stats, tasks] = await Promise.all([TaskAPI.getStats(), TaskAPI.getAll()]);
+        myTasks = tasks;
+
+        // Pie
+        if (uCharts.progressPie) uCharts.progressPie.destroy();
+        uCharts.progressPie = new Chart(document.getElementById('progressPie').getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            labels: ['To Do', 'In Progress', 'Completed'],
+            datasets: [{ data: [stats.todo, stats.inProgress, stats.completed], backgroundColor: ['#6b7280','#f59e0b','#10b981'], borderWidth: 0, cutout: '60%' }]
+          },
+          options: { plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // Bar
+        if (uCharts.progressBar) uCharts.progressBar.destroy();
+        uCharts.progressBar = new Chart(document.getElementById('progressBar').getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: ['High Priority', 'Medium Priority', 'Low Priority'],
+            datasets: [{
+              label: 'Tasks',
+              data: [stats.high, stats.medium, stats.low],
+              backgroundColor: ['rgba(239,68,68,0.7)','rgba(245,158,11,0.7)','rgba(16,185,129,0.7)'],
+              borderRadius: 8, borderWidth: 0
+            }]
+          },
+          options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } }
+        });
+
+        // Summary
+        const pct = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
+        const avgProgress = tasks.length ? Math.round(tasks.reduce((a, t) => a + t.progress, 0) / tasks.length) : 0;
+        document.getElementById('perfSummary').innerHTML = [
+          { label: 'Completion Rate', val: `${pct}%`, color: 'var(--accent-green)', icon: '🏆' },
+          { label: 'Avg Progress', val: `${avgProgress}%`, color: 'var(--accent)', icon: '📈' },
+          { label: 'Active Tasks', val: stats.inProgress, color: 'var(--accent3)', icon: '⚡' },
+          { label: 'High Priority', val: stats.high, color: 'var(--accent-red)', icon: '🔴' }
+        ].map(s => `
+          <div style="background:var(--bg-card);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--border);">
+            <div style="font-size:1.8rem;margin-bottom:6px;">${s.icon}</div>
+            <div style="font-size:1.5rem;font-weight:800;color:${s.color};">${s.val}</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">${s.label}</div>
+          </div>
+        `).join('');
+
+        // Table
+        document.getElementById('progressTable').innerHTML = tasks.length ? tasks.map(t => `
+          <tr>
+            <td><div style="font-weight:600;">${t.title}</div>${t.category ? `<div style="font-size:0.75rem;color:var(--text-muted);">${t.category}</div>` : ''}</td>
+            <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
+            <td><span class="badge badge-${t.status}">${t.status.replace('-',' ')}</span></td>
+            <td style="min-width:120px;"><div class="progress-bar"><div class="progress-fill" style="width:${t.progress}%"></div></div><div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">${t.progress}%</div></td>
+            <td style="font-size:0.82rem;">${formatDate(t.dueDate)}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="5" class="text-center text-muted" style="padding:30px;">No tasks yet</td></tr>';
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ===== Profile =====
+    async function loadUserProfile() {
+      try {
+        const user = await AuthAPI.me();
+        document.getElementById('uProfileName').textContent = user.name;
+        document.getElementById('uProfileEmail').textContent = user.email;
+        document.getElementById('uEditName').value = user.name;
+        document.getElementById('uEditPhone').value = user.phone || '';
+        document.getElementById('uEditDept').value = user.department || '';
+        document.getElementById('uEditBio').value = user.bio || '';
+        const avatarEl = document.getElementById('profileAvatarEl');
+        if (user.profilePhoto) {
+          avatarEl.innerHTML = `<img src="${user.profilePhoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+          avatarEl.style.padding = '0';
+        } else {
+          avatarEl.textContent = (user.name||'U')[0].toUpperCase();
+          avatarEl.style.padding = '';
+        }
+      } catch(e) {}
+    }
+
+    async function saveUserProfile() {
+      const data = {
+        name: document.getElementById('uEditName').value.trim(),
+        phone: document.getElementById('uEditPhone').value.trim(),
+        department: document.getElementById('uEditDept').value.trim(),
+        bio: document.getElementById('uEditBio').value.trim()
+      };
+      try {
+        await UserAPI.updateProfile(data);
+        const u = getUser(); Object.assign(u, data); localStorage.setItem('user', JSON.stringify(u));
+        document.getElementById('sidebarName').textContent = data.name;
+        document.getElementById('sidebarAvatar').innerHTML = avatarHtml(u, 36);
+        showToast('Profile saved!', 'success');
+        loadUserProfile();
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function uploadUserPhoto(input) {
+      const file = input.files[0]; if (!file) return;
+      try {
+        const data = await UserAPI.uploadPhoto(file);
+        const u = getUser(); u.profilePhoto = data.profilePhoto; localStorage.setItem('user', JSON.stringify(u));
+        showToast('Photo updated!', 'success');
+        loadUserProfile();
+        document.getElementById('sidebarAvatar').innerHTML = avatarHtml(u, 36);
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ===== Contact Admin =====
+    async function sendMessage() {
+      const subject = document.getElementById('msgSubject').value.trim();
+      const body = document.getElementById('msgBody').value.trim();
+      if (!subject || !body) return showToast('Subject and message are required', 'error');
+      try {
+        await MessageAPI.send({ subject, body });
+        document.getElementById('msgSubject').value = '';
+        document.getElementById('msgBody').value = '';
+        showToast('Message sent to admin! 📬', 'success');
+        loadSentMessages();
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function loadSentMessages() {
+      try {
+        const msgs = await MessageAPI.getMy();
+        const el = document.getElementById('sentMessages');
+        if (!msgs.length) {
+          el.innerHTML = '<div class="empty-state" style="padding:30px;"><div class="empty-icon" style="font-size:2.5rem;">📭</div><p>No messages sent yet</p></div>';
+          return;
+        }
+        el.innerHTML = msgs.map(m => `
+          <div style="padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;cursor:default;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+              <div style="font-weight:600;font-size:0.9rem;">${m.subject}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;">${timeAgo(m.createdAt)}</div>
+            </div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">${m.body.slice(0,80)}${m.body.length>80?'...':''}</div>
+            ${m.reply ? `
+              <div style="margin-top:8px;padding:8px;background:rgba(16,185,129,0.08);border-radius:6px;border-left:3px solid var(--accent-green);">
+                <div style="font-size:0.72rem;font-weight:700;color:var(--accent-green);margin-bottom:3px;">✅ Admin replied:</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);">${m.reply}</div>
+              </div>
+            ` : '<div style="margin-top:6px;font-size:0.75rem;color:var(--text-muted);">⏳ Awaiting reply...</div>'}
+          </div>
+        `).join('');
+      } catch(e) {}
+    }
+
+    // ===== Change Password =====
+    async function changeUserPassword() {
+      const curr = document.getElementById('uCurrPass').value;
+      const newP = document.getElementById('uNewPass').value;
+      const conf = document.getElementById('uConfirmPass').value;
+      if (!curr || !newP) return showToast('Fill all fields', 'error');
+      if (newP !== conf) return showToast('Passwords do not match', 'error');
+      if (newP.length < 6) return showToast('Min 6 characters', 'error');
+      try {
+        await AuthAPI.changePassword({ currentPassword: curr, newPassword: newP });
+        ['uCurrPass','uNewPass','uConfirmPass'].forEach(id => document.getElementById(id).value = '');
+        showToast('Password updated!', 'success');
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ===== Sidebar / Utilities =====
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open'); }
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function logout() { clearAuth(); window.location.href = '/index.html'; }
+
+    init();
+  </script>
+</body>
+</html>

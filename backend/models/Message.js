@@ -1,0 +1,13 @@
+const mongoose = require('mongoose');
+
+const messageSchema = new mongoose.Schema({
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  senderName: { type: String },
+  senderEmail: { type: String },
+  subject: { type: String, required: true },
+  body: { type: String, required: true },
+  isRead: { type: Boolean, default: false },
+  reply: { type: String, default: '' }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Message', messageSchema);

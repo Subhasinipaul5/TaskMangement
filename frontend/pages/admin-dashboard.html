@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow — Admin Panel</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="animated-bg"></div>
+  <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">Task<span>Flow</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-label">Overview</div>
+          <div class="nav-item active" onclick="showSection('dashboard')">
+            <span class="nav-icon">📊</span> Dashboard
+          </div>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-label">Management</div>
+          <div class="nav-item" onclick="showSection('tasks')">
+            <span class="nav-icon">📋</span> Tasks
+          </div>
+          <div class="nav-item" onclick="showSection('users')">
+            <span class="nav-icon">👥</span> User Management
+          </div>
+          <div class="nav-item" onclick="showSection('messages')">
+            <span class="nav-icon">💬</span> Messages
+            <span class="nav-badge" id="msgBadge" style="display:none;">0</span>
+          </div>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-label">Account</div>
+          <div class="nav-item" onclick="showSection('profile')">
+            <span class="nav-icon">👤</span> Profile
+          </div>
+          <div class="nav-item" onclick="showSection('settings')">
+            <span class="nav-icon">⚙️</span> Settings
+          </div>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-mini" onclick="showSection('profile')">
+          <div id="sidebarAvatar"></div>
+          <div class="user-mini-info">
+            <div class="user-mini-name" id="sidebarName">Admin</div>
+            <div class="user-mini-role">Administrator 👑</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-content">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="hamburger" onclick="toggleSidebar()">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="page-title" id="pageTitle">📊 Dashboard</div>
+        </div>
+        <div class="topbar-right">
+          <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></div>
+          <div class="notification-btn" onclick="showSection('messages')">
+            💬 <div class="notif-dot" id="notifDot" style="display:none;"></div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="logout()">🚪 Logout</button>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+
+        <!-- ===== DASHBOARD ===== -->
+        <section id="sec-dashboard" class="active fade-in">
+          <div style="margin-bottom:28px;position:relative;">
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">Good day, Admin 👑</div>
+            <h1>Overview Dashboard</h1>
+            <p style="color:var(--text-muted);margin-top:6px;">Monitor all tasks, users and productivity at a glance</p>
+            <div style="position:absolute;right:0;top:0;font-size:5rem;opacity:0.07;pointer-events:none;">📊</div>
+          </div>
+
+          <div class="stats-grid" id="adminStats">
+            <div class="stat-card purple"><div class="stat-icon purple">📋</div><div class="stat-info"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total Tasks</div></div></div>
+            <div class="stat-card green"><div class="stat-icon green">✅</div><div class="stat-info"><div class="stat-value" id="statDone">—</div><div class="stat-label">Completed</div></div></div>
+            <div class="stat-card amber"><div class="stat-icon amber">⚡</div><div class="stat-info"><div class="stat-value" id="statProgress">—</div><div class="stat-label">In Progress</div></div></div>
+            <div class="stat-card cyan"><div class="stat-icon cyan">👥</div><div class="stat-info"><div class="stat-value" id="statUsers">—</div><div class="stat-label">Total Users</div></div></div>
+          </div>
+
+          <!-- Charts -->
+          <div class="charts-grid">
+            <div class="card">
+              <div class="card-header"><h3>📈 Task Status</h3></div>
+              <canvas id="statusPieChart" height="220"></canvas>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>📊 Priority Distribution</h3></div>
+              <canvas id="priorityBarChart" height="220"></canvas>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>🍕 Completion Rate</h3></div>
+              <canvas id="completionDonut" height="220"></canvas>
+            </div>
+          </div>
+
+          <!-- Recent Tasks -->
+          <div class="card">
+            <div class="card-header">
+              <h3>🕐 Recent Tasks</h3>
+              <button class="btn btn-primary btn-sm" onclick="showSection('tasks')">View All</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Task</th><th>Assigned To</th><th>Priority</th><th>Status</th><th>Progress</th><th>Due Date</th></tr></thead>
+                <tbody id="recentTasksTable"><tr><td colspan="6" class="text-center text-muted">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== TASKS ===== -->
+        <section id="sec-tasks" class="fade-in">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h2>📋 Task Management</h2>
+              <p style="color:var(--text-muted);font-size:0.88rem;margin-top:4px;">Create, assign and track all tasks</p>
+            </div>
+            <button class="btn btn-primary" onclick="openTaskModal()">➕ New Task</button>
+          </div>
+
+          <!-- Filters -->
+          <div class="card" style="padding:16px;margin-bottom:20px;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+              <select class="form-control" style="width:auto;" id="filterStatus" onchange="loadTasks()">
+                <option value="">All Status</option>
+                <option value="todo">To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+              <select class="form-control" style="width:auto;" id="filterPriority" onchange="loadTasks()">
+                <option value="">All Priority</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <input type="text" class="form-control" style="flex:1;min-width:180px;" id="filterSearch" placeholder="🔍 Search tasks..." oninput="loadTasks()">
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Task</th><th>Assigned To</th><th>Priority</th><th>Status</th><th>Progress</th><th>Due</th><th>Actions</th></tr></thead>
+                <tbody id="tasksTable"><tr><td colspan="7" class="text-center text-muted">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== USERS ===== -->
+        <section id="sec-users" class="fade-in">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h2>👥 User Management</h2>
+              <p style="color:var(--text-muted);font-size:0.88rem;margin-top:4px;">Manage team members and track their progress</p>
+            </div>
+            <button class="btn btn-primary" onclick="openUserModal()">➕ Add User</button>
+          </div>
+          <div class="user-card-grid" id="usersGrid">
+            <div class="text-center text-muted" style="padding:40px;">Loading...</div>
+          </div>
+        </section>
+
+        <!-- ===== MESSAGES ===== -->
+        <section id="sec-messages" class="fade-in">
+          <div style="margin-bottom:24px;">
+            <h2>💬 Messages</h2>
+            <p style="color:var(--text-muted);font-size:0.88rem;margin-top:4px;">Messages sent by team members</p>
+          </div>
+          <div class="message-list" id="messagesList">
+            <div class="text-center text-muted" style="padding:40px;">Loading...</div>
+          </div>
+        </section>
+
+        <!-- ===== PROFILE ===== -->
+        <section id="sec-profile" class="fade-in">
+          <h2 style="margin-bottom:24px;">👤 My Profile</h2>
+          <div class="card" style="max-width:680px;">
+            <div class="profile-header">
+              <div class="profile-avatar-wrap">
+                <div id="profileAvatar" class="profile-avatar">A</div>
+                <div class="avatar-edit" onclick="document.getElementById('photoInput').click()">✏️</div>
+                <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
+              </div>
+              <div style="flex:1;">
+                <h3 id="profileName">Admin</h3>
+                <p style="color:var(--text-muted);font-size:0.85rem;" id="profileEmail">—</p>
+                <span class="badge badge-admin" style="margin-top:8px;">👑 Administrator</span>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <h3 style="margin-bottom:18px;">Edit Profile</h3>
+            <div class="grid-2">
+              <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="editName" class="form-control"></div>
+              <div class="form-group"><label class="form-label">Phone</label><input type="text" id="editPhone" class="form-control" placeholder="+91 XXXXX XXXXX"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Department</label><input type="text" id="editDept" class="form-control" placeholder="e.g. Engineering"></div>
+            <div class="form-group"><label class="form-label">Bio</label><textarea id="editBio" class="form-control" rows="3" placeholder="Tell about yourself..."></textarea></div>
+            <button class="btn btn-primary" onclick="saveProfile()">💾 Save Changes</button>
+          </div>
+        </section>
+
+        <!-- ===== SETTINGS ===== -->
+        <section id="sec-settings" class="fade-in">
+          <h2 style="margin-bottom:24px;">⚙️ Settings</h2>
+          <div class="card" style="max-width:480px;">
+            <h3 style="margin-bottom:20px;">🔒 Change Password</h3>
+            <div class="form-group"><label class="form-label">Current Password</label><input type="password" id="currPass" class="form-control"></div>
+            <div class="form-group"><label class="form-label">New Password</label><input type="password" id="newPass" class="form-control"></div>
+            <div class="form-group"><label class="form-label">Confirm New Password</label><input type="password" id="confirmPass" class="form-control"></div>
+            <button class="btn btn-primary" onclick="changePassword()">🔄 Update Password</button>
+          </div>
+          <div class="card" style="max-width:480px;margin-top:20px;">
+            <h3 style="margin-bottom:16px;">🎨 Appearance</h3>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span>Dark / Light Mode</span>
+              <div class="theme-toggle" onclick="toggleTheme()"></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TASK MODAL ===== -->
+  <div class="modal-overlay" id="taskModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="taskModalTitle">➕ New Task</h3>
+        <button class="modal-close" onclick="closeModal('taskModal')">✕</button>
+      </div>
+      <div class="form-group"><label class="form-label">Task Title *</label><input type="text" id="taskTitle" class="form-control" placeholder="Enter task title"></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea id="taskDesc" class="form-control" rows="3" placeholder="Task details..."></textarea></div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select id="taskPriority" class="form-control">
+            <option value="low">🟢 Low</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="high">🔴 High</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="taskStatus" class="form-control">
+            <option value="todo">📌 To Do</option>
+            <option value="in-progress">⚡ In Progress</option>
+            <option value="completed">✅ Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Assign To</label>
+          <select id="taskAssign" class="form-control"><option value="">Unassigned</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          <input type="date" id="taskDue" class="form-control">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <input type="text" id="taskCategory" class="form-control" placeholder="e.g. Development, Design...">
+      </div>
+      <input type="hidden" id="taskEditId">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button class="btn btn-secondary" onclick="closeModal('taskModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTask()">💾 Save Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== USER MODAL ===== -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="userModalTitle">➕ Add User</h3>
+        <button class="modal-close" onclick="closeModal('userModal')">✕</button>
+      </div>
+      <div class="form-group"><label class="form-label">Full Name *</label><input type="text" id="userName" class="form-control"></div>
+      <div class="form-group"><label class="form-label">Email *</label><input type="email" id="userEmail" class="form-control"></div>
+      <div id="userPasswordGroup" class="form-group"><label class="form-label">Password *</label><input type="password" id="userPassword" class="form-control"></div>
+      <div class="form-group"><label class="form-label">Department</label><input type="text" id="userDept" class="form-control"></div>
+      <input type="hidden" id="userEditId">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button class="btn btn-secondary" onclick="closeModal('userModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveUser()">💾 Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MESSAGE MODAL ===== -->
+  <div class="modal-overlay" id="messageModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📩 Message Details</h3>
+        <button class="modal-close" onclick="closeModal('messageModal')">✕</button>
+      </div>
+      <div id="messageDetail"></div>
+      <div style="margin-top:16px;">
+        <label class="form-label">Reply</label>
+        <textarea id="replyText" class="form-control" rows="3" placeholder="Type your reply..."></textarea>
+      </div>
+      <input type="hidden" id="replyMsgId">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+        <button class="btn btn-secondary" onclick="closeModal('messageModal')">Close</button>
+        <button class="btn btn-primary" onclick="sendReply()">📤 Send Reply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== USER DETAIL MODAL ===== -->
+  <div class="modal-overlay" id="userDetailModal">
+    <div class="modal" style="max-width:580px;">
+      <div class="modal-header">
+        <h3>👤 User Details</h3>
+        <button class="modal-close" onclick="closeModal('userDetailModal')">✕</button>
+      </div>
+      <div id="userDetailContent"></div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script>
+    if (!requireAuth('admin')) {}
+
+    let allTasks = [], allUsers = [], allMessages = [];
+    let charts = {};
+
+    // ===== Init =====
+    async function init() {
+      const user = getUser();
+      document.getElementById('sidebarName').textContent = user.name;
+      document.getElementById('sidebarAvatar').innerHTML = avatarHtml(user, 36);
+      loadDashboard();
+      loadMessages();
+    }
+
+    // ===== Navigation =====
+    function showSection(name) {
+      document.querySelectorAll('.page-content > section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`sec-${name}`).classList.add('active');
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(n => { if (n.textContent.toLowerCase().includes(name.replace(/-/g,' ').slice(0,5))) n.classList.add('active'); });
+      const titles = { dashboard: '📊 Dashboard', tasks: '📋 Tasks', users: '👥 Users', messages: '💬 Messages', profile: '👤 Profile', settings: '⚙️ Settings' };
+      document.getElementById('pageTitle').textContent = titles[name] || name;
+      closeSidebar();
+      if (name === 'dashboard') loadDashboard();
+      if (name === 'tasks') loadTasks();
+      if (name === 'users') loadUsers();
+      if (name === 'messages') { loadMessages(); markAllRead(); }
+      if (name === 'profile') loadProfile();
+    }
+
+    // ===== Dashboard =====
+    async function loadDashboard() {
+      try {
+        const [stats, tasks, users] = await Promise.all([TaskAPI.getStats(), TaskAPI.getAll(), UserAPI.getAll()]);
+        document.getElementById('statTotal').textContent = stats.total;
+        document.getElementById('statDone').textContent = stats.completed;
+        document.getElementById('statProgress').textContent = stats.inProgress;
+        document.getElementById('statUsers').textContent = users.length;
+        allTasks = tasks; allUsers = users;
+        renderRecentTasks(tasks.slice(0, 8));
+        renderCharts(stats);
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    function renderCharts(stats) {
+      const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      const textColor = isDark ? '#b0aed0' : '#4a4870';
+      Chart.defaults.color = textColor;
+
+      // Status Pie
+      if (charts.pie) charts.pie.destroy();
+      const pieCtx = document.getElementById('statusPieChart').getContext('2d');
+      charts.pie = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+          labels: ['To Do', 'In Progress', 'Completed'],
+          datasets: [{ data: [stats.todo, stats.inProgress, stats.completed], backgroundColor: ['#6b7280','#f59e0b','#10b981'], borderWidth: 0 }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+      });
+
+      // Priority Bar
+      if (charts.bar) charts.bar.destroy();
+      const barCtx = document.getElementById('priorityBarChart').getContext('2d');
+      charts.bar = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: ['High', 'Medium', 'Low'],
+          datasets: [{ label: 'Tasks', data: [stats.high, stats.medium, stats.low], backgroundColor: ['#ef4444','#f59e0b','#10b981'], borderRadius: 8 }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } }
+      });
+
+      // Completion Donut
+      if (charts.donut) charts.donut.destroy();
+      const donutCtx = document.getElementById('completionDonut').getContext('2d');
+      const pct = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
+      charts.donut = new Chart(donutCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Completed', 'Remaining'],
+          datasets: [{ data: [stats.completed, stats.total - stats.completed], backgroundColor: ['#7c3aed','rgba(255,255,255,0.08)'], borderWidth: 0, cutout: '75%' }]
+        },
+        options: {
+          plugins: {
+            legend: { position: 'bottom' },
+            centerText: { text: `${pct}%` }
+          }
+        },
+        plugins: [{
+          id: 'centerText',
+          afterDraw(chart) {
+            const { ctx, chartArea: { width, height, left, top } } = chart;
+            ctx.save();
+            ctx.font = 'bold 28px sans-serif';
+            ctx.fillStyle = isDark ? '#fff' : '#1a1040';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(`${pct}%`, left + width/2, top + height/2);
+            ctx.restore();
+          }
+        }]
+      });
+    }
+
+    function renderRecentTasks(tasks) {
+      const tbody = document.getElementById('recentTasksTable');
+      if (!tasks.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:30px;">No tasks yet</td></tr>'; return; }
+      tbody.innerHTML = tasks.map(t => `
+        <tr>
+          <td><div style="font-weight:600;">${t.title}</div><div style="font-size:0.75rem;color:var(--text-muted);">${t.category || '—'}</div></td>
+          <td>${t.assignedTo ? `<div style="display:flex;align-items:center;gap:8px;">${avatarHtml(t.assignedTo,28)}<span>${t.assignedTo.name}</span></div>` : '<span class="text-muted">Unassigned</span>'}</td>
+          <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
+          <td><span class="badge badge-${t.status}">${t.status}</span></td>
+          <td><div style="min-width:80px;"><div class="progress-bar"><div class="progress-fill" style="width:${t.progress}%"></div></div><div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">${t.progress}%</div></div></td>
+          <td style="font-size:0.82rem;">${formatDate(t.dueDate)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ===== Tasks =====
+    async function loadTasks() {
+      try {
+        if (!allTasks.length) allTasks = await TaskAPI.getAll();
+        const statusF = document.getElementById('filterStatus')?.value || '';
+        const priorityF = document.getElementById('filterPriority')?.value || '';
+        const searchF = document.getElementById('filterSearch')?.value.toLowerCase() || '';
+        let filtered = allTasks.filter(t =>
+          (!statusF || t.status === statusF) &&
+          (!priorityF || t.priority === priorityF) &&
+          (!searchF || t.title.toLowerCase().includes(searchF))
+        );
+        const tbody = document.getElementById('tasksTable');
+        if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:40px;">No tasks found</td></tr>'; return; }
+        tbody.innerHTML = filtered.map(t => `
+          <tr>
+            <td><div style="font-weight:600;max-width:200px;">${t.title}</div><div style="font-size:0.75rem;color:var(--text-muted);">${t.description?.slice(0,50)||''}${t.description?.length>50?'...':''}</div></td>
+            <td>${t.assignedTo ? `<div style="display:flex;align-items:center;gap:8px;">${avatarHtml(t.assignedTo,28)}<span>${t.assignedTo.name}</span></div>` : '<span class="text-muted">—</span>'}</td>
+            <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
+            <td><span class="badge badge-${t.status}">${t.status.replace('-',' ')}</span></td>
+            <td style="min-width:100px;"><div class="progress-bar"><div class="progress-fill" style="width:${t.progress}%"></div></div><div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">${t.progress}%</div></td>
+            <td style="font-size:0.82rem;">${formatDate(t.dueDate)}</td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-secondary btn-sm btn-icon" onclick="editTask('${t._id}')" title="Edit">✏️</button>
+                <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTask('${t._id}')" title="Delete">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function openTaskModal(taskId) {
+      // Load users for assignment
+      if (!allUsers.length) allUsers = await UserAPI.getAll();
+      const select = document.getElementById('taskAssign');
+      select.innerHTML = '<option value="">Unassigned</option>' + allUsers.map(u => `<option value="${u._id}">${u.name} (${u.email})</option>`).join('');
+      document.getElementById('taskEditId').value = '';
+      document.getElementById('taskModalTitle').textContent = '➕ New Task';
+      ['taskTitle','taskDesc','taskCategory'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('taskPriority').value = 'medium';
+      document.getElementById('taskStatus').value = 'todo';
+      document.getElementById('taskDue').value = '';
+      document.getElementById('taskModal').classList.add('open');
+    }
+
+    async function editTask(id) {
+      const task = allTasks.find(t => t._id === id);
+      if (!task) return;
+      if (!allUsers.length) allUsers = await UserAPI.getAll();
+      const select = document.getElementById('taskAssign');
+      select.innerHTML = '<option value="">Unassigned</option>' + allUsers.map(u => `<option value="${u._id}">${u.name}</option>`).join('');
+      document.getElementById('taskEditId').value = id;
+      document.getElementById('taskModalTitle').textContent = '✏️ Edit Task';
+      document.getElementById('taskTitle').value = task.title;
+      document.getElementById('taskDesc').value = task.description;
+      document.getElementById('taskPriority').value = task.priority;
+      document.getElementById('taskStatus').value = task.status;
+      document.getElementById('taskCategory').value = task.category || '';
+      document.getElementById('taskDue').value = task.dueDate ? task.dueDate.split('T')[0] : '';
+      if (task.assignedTo) document.getElementById('taskAssign').value = task.assignedTo._id || task.assignedTo;
+      document.getElementById('taskModal').classList.add('open');
+    }
+
+    async function saveTask() {
+      const id = document.getElementById('taskEditId').value;
+      const data = {
+        title: document.getElementById('taskTitle').value.trim(),
+        description: document.getElementById('taskDesc').value.trim(),
+        priority: document.getElementById('taskPriority').value,
+        status: document.getElementById('taskStatus').value,
+        assignedTo: document.getElementById('taskAssign').value || null,
+        dueDate: document.getElementById('taskDue').value || null,
+        category: document.getElementById('taskCategory').value.trim()
+      };
+      if (!data.title) return showToast('Title is required', 'error');
+      try {
+        if (id) await TaskAPI.update(id, data);
+        else await TaskAPI.create(data);
+        allTasks = [];
+        closeModal('taskModal');
+        showToast(id ? 'Task updated!' : 'Task created!', 'success');
+        loadTasks();
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function deleteTask(id) {
+      if (!confirm('Delete this task?')) return;
+      try {
+        await TaskAPI.delete(id);
+        allTasks = allTasks.filter(t => t._id !== id);
+        showToast('Task deleted', 'success');
+        loadTasks();
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ===== Users =====
+    async function loadUsers() {
+      try {
+        allUsers = await UserAPI.getAll();
+        const grid = document.getElementById('usersGrid');
+        if (!allUsers.length) {
+          grid.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><p>No users yet. Add team members.</p></div>';
+          return;
+        }
+        const statsPromises = allUsers.map(u => UserAPI.getUserStats(u._id).catch(() => ({ total:0,completed:0,inProgress:0,todo:0 })));
+        const userStats = await Promise.all(statsPromises);
+        grid.innerHTML = allUsers.map((u, i) => {
+          const s = userStats[i];
+          const pct = s.total ? Math.round((s.completed/s.total)*100) : 0;
+          return `
+            <div class="user-profile-card">
+              <div style="display:flex;justify-content:center;margin-bottom:10px;">${u.profilePhoto ? `<img src="${u.profilePhoto}" class="user-card-avatar" style="display:flex;">` : `<div class="user-card-avatar">${(u.name||'?')[0].toUpperCase()}</div>`}</div>
+              <div class="user-card-name">${u.name}</div>
+              <div class="user-card-email">${u.email}</div>
+              ${u.department ? `<span class="badge" style="background:rgba(124,58,237,0.15);color:var(--accent);">${u.department}</span>` : ''}
+              <div class="user-card-stats">
+                <div class="user-stat"><div class="user-stat-val" style="color:var(--accent);">${s.total}</div><div class="user-stat-lbl">Total</div></div>
+                <div class="user-stat"><div class="user-stat-val" style="color:var(--accent-green);">${s.completed}</div><div class="user-stat-lbl">Done</div></div>
+                <div class="user-stat"><div class="user-stat-val" style="color:var(--accent3);">${s.inProgress}</div><div class="user-stat-lbl">Active</div></div>
+              </div>
+              <div style="margin-top:12px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted);margin-bottom:5px;">
+                  <span>Progress</span><span>${pct}%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:14px;">
+                <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="viewUserDetail('${u._id}')">👁️ View</button>
+                <button class="btn btn-danger btn-sm btn-icon" onclick="deleteUser('${u._id}')">🗑️</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function viewUserDetail(userId) {
+      try {
+        const user = allUsers.find(u => u._id === userId);
+        const stats = await UserAPI.getUserStats(userId);
+        const content = document.getElementById('userDetailContent');
+        content.innerHTML = `
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+            ${user.profilePhoto ? `<img src="${user.profilePhoto}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;">` : `<div style="width:70px;height:70px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:#fff;">${(user.name||'?')[0]}</div>`}
+            <div>
+              <h3>${user.name}</h3>
+              <p style="color:var(--text-muted);font-size:0.85rem;">${user.email}</p>
+              ${user.department ? `<span class="badge badge-user">${user.department}</span>` : ''}
+            </div>
+          </div>
+          <div class="stats-grid" style="margin-bottom:16px;">
+            <div class="stat-card purple" style="padding:14px;"><div class="stat-icon purple" style="width:36px;height:36px;font-size:1rem;">📋</div><div class="stat-info"><div class="stat-value" style="font-size:1.4rem;">${stats.total}</div><div class="stat-label">Tasks</div></div></div>
+            <div class="stat-card green" style="padding:14px;"><div class="stat-icon green" style="width:36px;height:36px;font-size:1rem;">✅</div><div class="stat-info"><div class="stat-value" style="font-size:1.4rem;">${stats.completed}</div><div class="stat-label">Done</div></div></div>
+            <div class="stat-card amber" style="padding:14px;"><div class="stat-icon amber" style="width:36px;height:36px;font-size:1rem;">⚡</div><div class="stat-info"><div class="stat-value" style="font-size:1.4rem;">${stats.inProgress}</div><div class="stat-label">Active</div></div></div>
+          </div>
+          <h4 style="margin-bottom:12px;">Recent Tasks</h4>
+          ${stats.tasks.length ? stats.tasks.map(t => `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-card);border-radius:8px;margin-bottom:8px;">
+              <div><div style="font-weight:600;font-size:0.88rem;">${t.title}</div><div style="font-size:0.75rem;color:var(--text-muted);">${formatDate(t.dueDate)}</div></div>
+              <span class="badge badge-${t.status}">${t.status}</span>
+            </div>
+          `).join('') : '<p class="text-muted text-sm">No tasks assigned</p>'}
+        `;
+        document.getElementById('userDetailModal').classList.add('open');
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    function openUserModal() {
+      document.getElementById('userEditId').value = '';
+      document.getElementById('userModalTitle').textContent = '➕ Add User';
+      ['userName','userEmail','userPassword','userDept'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('userPasswordGroup').style.display = 'block';
+      document.getElementById('userModal').classList.add('open');
+    }
+
+    async function saveUser() {
+      const id = document.getElementById('userEditId').value;
+      const data = {
+        name: document.getElementById('userName').value.trim(),
+        email: document.getElementById('userEmail').value.trim(),
+        password: document.getElementById('userPassword').value,
+        department: document.getElementById('userDept').value.trim()
+      };
+      if (!data.name || !data.email) return showToast('Name and email required', 'error');
+      if (!id && !data.password) return showToast('Password required for new user', 'error');
+      try {
+        if (id) await UserAPI.update(id, data);
+        else await UserAPI.create(data);
+        allUsers = [];
+        closeModal('userModal');
+        showToast(id ? 'User updated!' : 'User added!', 'success');
+        loadUsers();
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function deleteUser(id) {
+      if (!confirm('Delete this user? Their tasks will remain.')) return;
+      try {
+        await UserAPI.delete(id);
+        allUsers = allUsers.filter(u => u._id !== id);
+        showToast('User deleted', 'success');
+        loadUsers();
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ===== Messages =====
+    async function loadMessages() {
+      try {
+        const [msgs, countData] = await Promise.all([MessageAPI.getAll(), MessageAPI.getUnreadCount()]);
+        allMessages = msgs;
+        const count = countData.count;
+        const badge = document.getElementById('msgBadge');
+        const dot = document.getElementById('notifDot');
+        if (count > 0) { badge.textContent = count; badge.style.display = ''; dot.style.display = ''; }
+        else { badge.style.display = 'none'; dot.style.display = 'none'; }
+        const list = document.getElementById('messagesList');
+        if (!msgs.length) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div><p>No messages yet</p></div>'; return; }
+        list.innerHTML = msgs.map(m => `
+          <div class="message-item ${!m.isRead ? 'unread' : ''}" onclick="openMessage('${m._id}')">
+            <div class="message-avatar">${(m.senderName||'?')[0].toUpperCase()}</div>
+            <div style="flex:1;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-weight:${m.isRead?'500':'700'};">${m.senderName} <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">&lt;${m.senderEmail}&gt;</span></div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">${timeAgo(m.createdAt)}</div>
+              </div>
+              <div style="font-weight:600;margin-top:3px;">${m.subject}</div>
+              <div class="message-body-text">${m.body.slice(0,100)}${m.body.length>100?'...':''}</div>
+              ${m.reply ? `<div style="margin-top:6px;padding:6px 10px;background:rgba(124,58,237,0.1);border-radius:6px;font-size:0.8rem;color:var(--accent);">✉️ Replied</div>` : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch(e) {}
+    }
+
+    function openMessage(id) {
+      const m = allMessages.find(msg => msg._id === id);
+      if (!m) return;
+      document.getElementById('messageDetail').innerHTML = `
+        <div style="background:var(--bg-card);border-radius:10px;padding:16px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <div class="message-avatar">${(m.senderName||'?')[0].toUpperCase()}</div>
+            <div>
+              <div style="font-weight:700;">${m.senderName}</div>
+              <div style="font-size:0.8rem;color:var(--text-muted);">${m.senderEmail} · ${formatDate(m.createdAt)}</div>
+            </div>
+          </div>
+          <div style="font-weight:700;margin-bottom:8px;">📩 ${m.subject}</div>
+          <div style="color:var(--text-secondary);line-height:1.6;">${m.body}</div>
+          ${m.reply ? `<div style="margin-top:12px;padding:10px;background:rgba(124,58,237,0.1);border-radius:8px;"><div style="font-size:0.78rem;color:var(--accent);margin-bottom:4px;">Your previous reply:</div><div>${m.reply}</div></div>` : ''}
+        </div>
+      `;
+      document.getElementById('replyMsgId').value = id;
+      document.getElementById('replyText').value = '';
+      document.getElementById('messageModal').classList.add('open');
+      // Mark as read
+      MessageAPI.reply(id, m.reply || '').catch(() => {});
+    }
+
+    async function sendReply() {
+      const id = document.getElementById('replyMsgId').value;
+      const reply = document.getElementById('replyText').value.trim();
+      if (!reply) return showToast('Please type a reply', 'error');
+      try {
+        await MessageAPI.reply(id, reply);
+        closeModal('messageModal');
+        showToast('Reply sent!', 'success');
+        loadMessages();
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function markAllRead() { loadMessages(); }
+
+    // ===== Profile =====
+    async function loadProfile() {
+      try {
+        const user = await AuthAPI.me();
+        document.getElementById('profileName').textContent = user.name;
+        document.getElementById('profileEmail').textContent = user.email;
+        document.getElementById('editName').value = user.name;
+        document.getElementById('editPhone').value = user.phone || '';
+        document.getElementById('editDept').value = user.department || '';
+        document.getElementById('editBio').value = user.bio || '';
+        const avatarEl = document.getElementById('profileAvatar');
+        if (user.profilePhoto) {
+          avatarEl.innerHTML = `<img src="${user.profilePhoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        } else {
+          avatarEl.textContent = user.name[0].toUpperCase();
+        }
+      } catch(e) {}
+    }
+
+    async function saveProfile() {
+      const data = {
+        name: document.getElementById('editName').value.trim(),
+        phone: document.getElementById('editPhone').value.trim(),
+        department: document.getElementById('editDept').value.trim(),
+        bio: document.getElementById('editBio').value.trim()
+      };
+      try {
+        await UserAPI.updateProfile(data);
+        const u = getUser(); Object.assign(u, data); localStorage.setItem('user', JSON.stringify(u));
+        document.getElementById('sidebarName').textContent = data.name;
+        showToast('Profile saved!', 'success');
+        loadProfile();
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function uploadPhoto(input) {
+      const file = input.files[0]; if (!file) return;
+      try {
+        const data = await UserAPI.uploadPhoto(file);
+        const u = getUser(); u.profilePhoto = data.profilePhoto; localStorage.setItem('user', JSON.stringify(u));
+        showToast('Photo updated!', 'success');
+        loadProfile();
+        document.getElementById('sidebarAvatar').innerHTML = avatarHtml(u, 36);
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ===== Change Password =====
+    async function changePassword() {
+      const curr = document.getElementById('currPass').value;
+      const newP = document.getElementById('newPass').value;
+      const conf = document.getElementById('confirmPass').value;
+      if (!curr || !newP) return showToast('Fill all fields', 'error');
+      if (newP !== conf) return showToast('Passwords do not match', 'error');
+      if (newP.length < 6) return showToast('Min 6 characters', 'error');
+      try {
+        await AuthAPI.changePassword({ currentPassword: curr, newPassword: newP });
+        ['currPass','newPass','confirmPass'].forEach(id => document.getElementById(id).value = '');
+        showToast('Password updated!', 'success');
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ===== Sidebar =====
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open'); }
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function logout() { clearAuth(); window.location.href = '/index.html'; }
+
+    init();
+  </script>
+</body>
+</html>
