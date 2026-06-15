@@ -2,6 +2,8 @@
 # ⚡ TaskFlow — Task Management Application
 
 A full-stack task management app with Admin & User panels, real-time charts, messaging, and profile photos.
+# TaskMangement
+Developed a Task Management System that enables users to create, update, organize, and track tasks efficiently. The application features task categorization, status management, and a user-friendly interface to improve productivity and workflow management.
 
 ## 🗂️ Project Structure
 taskapp/
@@ -97,6 +99,3 @@ Visit: **http://localhost:5000**
 
 ## 📱 Responsive Design
 Works on mobile, tablet, and desktop. Hamburger menu on mobile.
-
-# TaskMangement
-Developed a Task Management System that enables users to create, update, organize, and track tasks efficiently. The application features task categorization, status management, and a user-friendly interface to improve productivity and workflow management.
